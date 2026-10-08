@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BadiyabGram</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  :root {
+    --bg-main:#0e1621; --bg-side:#17212b; --bg-card:#202b36; --bg-hover:#232e3c;
+    --bg-input:#242f3d; --bg-active:#2b5278; --accent:#2AABEE; --accent-hover:#229ED9;
+    --text:#fff; --text-dim:#7d8e9e; --border:#101921;
+    --msg-out:#2b5278; --msg-in:#182533; --danger:#e53935; --success:#4fae4e; --gold:#ffc107;
+  }
+  body.light {
+    --bg-main:#fff; --bg-side:#fff; --bg-card:#f4f4f5; --bg-hover:#f1f1f1;
+    --bg-input:#f1f1f1; --bg-active:#e3f2fd; --text:#000; --text-dim:#707579;
+    --border:#e4e4e5; --msg-out:#eeffde; --msg-in:#fff;
+  }
+  body { height:100vh; overflow:hidden; background:var(--bg-main); color:var(--text); }
+
+  /* ========= Auth ========= */
+  #authScreen {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:100vh; background:linear-gradient(135deg,#17212b,#0e1621);
+  }
+  #authScreen .logo {
+    width:120px; height:120px; border-radius:50%;
+    background:linear-gradient(135deg,#2AABEE,#229ED9);
+    display:flex; align-items:center; justify-content:center;
+    font-size:60px; margin-bottom:20px; cursor:pointer;
+  }
+  #authScreen h1 { font-size:26px; margin-bottom:8px; color:#fff; }
+  #authScreen p { color:#7d8e9e; margin-bottom:30px; font-size:14px; }
+  #authScreen input {
+    width:320px; padding:14px 18px; margin-bottom:12px;
+    background:#17212b; border:1px solid #2b3a4a; border-radius:10px;
+    color:#fff; font-size:15px; outline:none;
+  }
+  #authScreen input:focus { border-color:#2AABEE; }
+  #authScreen button {
+    width:320px; padding:14px; background:#2AABEE; border:none;
+    border-radius:10px; color:#fff; font-size:16px; font-weight:600;
+    cursor:pointer; margin-top:6px;
+  }
+  #authScreen button:hover { background:#229ED9; }
+  #authScreen .switch { color:#2AABEE; margin-top:16px; cursor:pointer; font-size:14px; }
+
+  /* ========= App ========= */
+  #app { display:none; height:100vh; }
+  .sidebar {
+    width:400px; height:100vh; background:var(--bg-side);
+    border-left:1px solid var(--border); display:flex; flex-direction:column;
+    float:right;
+  }
+  .sidebar-header {
+    padding:8px 12px; display:flex; align-items:center;
+    gap:8px; border-bottom:1px solid var(--border);
+  }
+  .icon-btn {
+    width:40px; height:40px; border-radius:50%; background:transparent;
+    border:none; color:var(--text-dim); font-size:20px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s; flex-shrink:0;
+  }
+  .icon-btn:hover { background:var(--bg-hover); }
+  .search-box {
+    flex:1; background:var(--bg-input); border:none; border-radius:20px;
+    padding:10px 16px; color:var(--text); outline:none; font-size:14px;
+  }
+  .search-box::placeholder { color:var(--text-dim); }
+  .new-msg-bar {
+    padding:10px 16px; display:flex; align-items:center; gap:12px;
+    cursor:pointer; border-bottom:1px solid var(--border);
+    color:var(--accent); font-weight:600; font-size:14px;
+  }
+  .new-msg-bar:hover { background:var(--bg-hover); }
+  .new-msg-bar .icon {
+    width:44px; height:44px; border-radius:50%; background:var(--accent);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:18px; font-weight:700;
+  }
+  .chat-list { flex:1; overflow-y:auto; }
+  .chat-item {
+    padding:10px 16px; display:flex; gap:12px; cursor:pointer;
+    align-items:center; transition:background .15s;
+  }
+  .chat-item:hover { background:var(--bg-hover); }
+  .chat-item.active { background:var(--bg-active); }
+  .avatar {
+    width:54px; height:54px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:600; color:#fff;
+    background-size:cover; background-position:center; overflow:hidden;
+  }
+  .avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .avatar.sm { width:42px; height:42px; font-size:16px; }
+  .avatar.xs { width:34px; height:34px; font-size:14px; }
+  .avatar.lg { width:110px; height:110px; font-size:42px; }
+  .chat-info { flex:1; min-width:0; }
+  .chat-info .name { font-size:15px; font-weight:600; display:flex; align-items:center; gap:5px; color:var(--text); }
+  .chat-info .last { font-size:13px; color:var(--text-dim); margin-top:3px; 
+                     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* تیک آبی رسمی */
+  .vbadge {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:16px; height:16px; border-radius:50%; background:var(--accent);
+    color:#fff; font-size:10px; font-weight:700; flex-shrink:0;
+  }
+  .vbadge.lg { width:22px; height:22px; font-size:14px; }
+
+  .chat-panel {
+    margin-right:400px; height:100vh; display:flex; flex-direction:column;
+    background:var(--bg-main);
+  }
+  .chat-panel .empty {
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:var(--text-dim); font-size:15px; gap:16px;
+  }
+  .chat-panel .empty .big-icon {
+    width:120px; height:120px; border-radius:50%; background:var(--bg-card);
+    display:flex; align-items:center; justify-content:center; font-size:60px;
+  }
+  .chat-header {
+    padding:8px 16px; background:var(--bg-side); display:flex;
+    align-items:center; gap:12px; border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .chat-header:hover { background:var(--bg-hover); }
+  .chat-header .info { flex:1; }
+  .chat-header .name { font-size:16px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .chat-header .status { font-size:13px; color:var(--accent); }
+  .messages {
+    flex:1; overflow-y:auto; padding:20px 40px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .msg {
+    max-width:60%; padding:6px 12px; border-radius:14px;
+    font-size:14px; line-height:1.4; word-wrap:break-word;
+    background:var(--msg-in); align-self:flex-start;
+    border-bottom-right-radius:4px; color:var(--text);
+    box-shadow:0 1px 1px rgba(0,0,0,.1); position:relative;
+  }
+  .msg.me {
+    background:var(--msg-out); align-self:flex-end;
+    border-bottom-right-radius:14px; border-bottom-left-radius:4px;
+  }
+  .msg .sender { color:var(--accent); font-size:12px; font-weight:600; margin-bottom:3px; }
+  .msg .meta { display:flex; align-items:center; justify-content:flex-end; gap:4px; margin-top:2px; }
+  .msg .time { font-size:11px; color:var(--text-dim); }
+  .msg.me .time { color:#a6c8e3; }
+  .msg .check { color:var(--success); font-size:12px; }
+  .msg img.photo { max-width:300px; border-radius:10px; display:block; margin-bottom:4px; }
+
+  .input-area {
+    padding:10px 16px; background:var(--bg-side); display:flex; gap:10px; align-items:center;
+    border-top:1px solid var(--border);
+  }
+  .input-area input {
+    flex:1; background:var(--bg-input); border:none; border-radius:20px;
+    padding:12px 18px; color:var(--text); outline:none; font-size:14px;
+  }
+  .input-area input::placeholder { color:var(--text-dim); }
+  .input-area button {
+    width:44px; height:44px; border-radius:50%; background:var(--accent);
+    border:none; color:#fff; font-size:18px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .input-area button:hover { background:var(--accent-hover); }
+  .input-area .attach-btn {
+    background:transparent; color:var(--text-dim); font-size:22px;
+  }
+  .input-area .attach-btn:hover { background:var(--bg-hover); }
+
+  /* Modal */
+  .modal-bg {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.65);
+    z-index:100; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-bg.show { display:flex; }
+  .modal {
+    background:var(--bg-side); border-radius:14px; padding:24px;
+    width:520px; max-width:100%; max-height:88vh; overflow-y:auto;
+    color:var(--text);
+  }
+  .modal.wide { width:760px; }
+  .modal h2 { margin-bottom:16px; font-size:20px; color:var(--text); }
+  .modal h3 { font-size:15px; margin:16px 0 8px; color:var(--text); }
+  .modal label { font-size:13px; color:var(--text-dim); display:block; margin-bottom:4px; }
+  .modal input, .modal select, .modal textarea {
+    width:100%; padding:11px 14px; margin-bottom:10px;
+    background:var(--bg-input); border:1px solid var(--border);
+    border-radius:8px; color:var(--text); outline:none; font-size:14px;
+    font-family:inherit;
+  }
+  .modal button {
+    padding:10px 18px; border:none; border-radius:8px;
+    cursor:pointer; font-size:14px; font-weight:600; margin-left:6px;
+    transition:opacity .15s;
+  }
+  .modal button:hover { opacity:.85; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-danger { background:var(--danger); color:#fff; }
+  .btn-gray { background:var(--bg-card); color:var(--text); }
+  .btn-success { background:var(--success); color:#fff; }
+  .btn-gold { background:var(--gold); color:#000; }
+  .btn-sm { padding:6px 10px; font-size:12px; margin:0; }
+  
+  .admin-item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 12px; background:var(--bg-card); border-radius:8px; margin-bottom:6px;
+    gap:8px; flex-wrap:wrap;
+  }
+  .admin-item .u { font-size:14px; flex:1; min-width:150px; }
+  .admin-item .actions { display:flex; gap:4px; flex-wrap:wrap; }
+
+  .profile-header {
+    display:flex; flex-direction:column; align-items:center; padding:16px 0;
+  }
+  .profile-header .avatar { margin-bottom:12px; cursor:pointer; }
+  .profile-header .name { font-size:22px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .profile-header .status { color:var(--text-dim); font-size:14px; margin-top:4px; }
+  
+  .field {
+    display:flex; justify-content:space-between; padding:12px 4px;
+    border-bottom:1px solid var(--border); font-size:14px; align-items:center; gap:12px;
+  }
+  .field .label { color:var(--text-dim); }
+  .field .value { color:var(--text); font-weight:500; text-align:left; word-break:break-word; }
+  
+  .tabs {
+    display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:16px;
+    overflow-x:auto;
+  }
+  .tab {
+    padding:10px 14px; cursor:pointer; font-size:13px; color:var(--text-dim);
+    border-bottom:2px solid transparent; font-weight:600; white-space:nowrap;
+  }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  
+  .admin-search {
+    width:100%; padding:10px 14px; margin-bottom:12px;
+    background:var(--bg-input); border:1px solid var(--border);
+    border-radius:8px; color:var(--text); outline:none;
+  }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin-bottom:12px; }
+  .stat-card {
+    background:var(--bg-card); padding:14px; border-radius:10px; text-align:center;
+  }
+  .stat-card .num { font-size:22px; font-weight:700; color:var(--accent); }
+  .stat-card .lbl { font-size:12px; color:var(--text-dim); margin-top:4px; }
+  
+  .file-btn {
+    display:inline-block; padding:10px 18px; background:var(--accent); color:#fff;
+    border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;
+  }
+  .file-btn input { display:none; }
+  
+  .username-row { display:flex; gap:6px; align-items:center; }
+  
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--bg-card); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH ============ -->
+<div id="authScreen">
+  <div class="logo" id="authLogo">✈️</div>
+  <h1>BadiyabGram</h1>
+  <p>ساخته شده توسط الیاس بادیاب</p>
+  <input id="authEmail" type="email" placeholder="ایمیل">
+  <input id="authPass" type="password" placeholder="رمز عبور">
+  <input id="authName" type="text" placeholder="نام کامل" style="display:none;">
+  <input id="authUsername" type="text" placeholder="آیدی (مثلاً @elias)" style="display:none;">
+  <button id="authBtn">ورود</button>
+  <div class="switch" id="switchAuth">حساب نداری؟ ثبت‌نام کن</div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <button class="icon-btn" onclick="openMenu()">☰</button>
+      <input class="search-box" placeholder="جستجو..." id="searchInput">
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+    </div>
+    <div class="new-msg-bar" onclick="openNewChat()">
+      <div class="icon">✏️</div>
+      <span>پیام جدید</span>
+    </div>
+    <div class="chat-list" id="chatList"></div>
+  </div>
+  
+  <div class="chat-panel">
+    <div id="chatEmpty" class="empty">
+      <div class="big-icon">✈️</div>
+      <div>یک چت رو انتخاب کن</div>
+    </div>
+    <div id="chatView" style="display:none; flex-direction:column; height:100%;">
+      <div class="chat-header" onclick="openChatInfo(currentChat)">
+        <div class="avatar sm" id="chatAvatar"></div>
+        <div class="info">
+          <div class="name" id="chatName"></div>
+          <div class="status" id="chatStatus"></div>
+        </div>
+        <button class="icon-btn" onclick="event.stopPropagation();openChatMenu()">⋮</button>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="input-area">
+        <button class="attach-btn" onclick="document.getElementById('photoInput').click()">📎</button>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="sendPhoto(event)">
+        <input id="msgInput" placeholder="پیام بنویس..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button onclick="sendMsg()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+/* =========================================================
+   BadiyabGram v3 — الیاس بادیاب
+   Owner: eliasbadiyab@gmail.com / elias1389
+   ========================================================= */
+const OWNER_EMAIL = "eliasbadiyab@gmail.com";
+const STORAGE_KEY = "badiyabgram_v3";
+
+function defaultDB() {
+  return {
+    users: [{
+      email: OWNER_EMAIL, password: "elias1389",
+      name: "الیاس بادیاب", username: "@elias_badiyab",
+      bio: "سازنده BadiyabGram", phone: "", photo: null,
+      verified: true, isOwner: true, isAdmin: true,
+      banned: false, banType: null, color: "#2AABEE",
+      createdAt: Date.now()
+    }],
+    chats: [], messages: [], logs: [],
+    session: null, theme: "dark"
+  };
+}
+function loadDB() {
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : defaultDB(); }
+  catch { return defaultDB(); }
+}
+function saveDB() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch(e){ alert("حافظه پر شده!"); } }
+let DB = loadDB();
+
+const $ = id => document.getElementById(id);
+const colorFor = (str) => {
+  const c = ["#e17076","#7bc862","#e5ca77","#65aadd","#a695e7","#ee7aae","#6ec9cb","#faa774"];
+  let h=0; for (let ch of String(str)) h=(h*31+ch.charCodeAt(0))%c.length; return c[h];
+};
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now = () => Date.now();
+const fmtTime = t => new Date(t).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit"});
+const me = () => DB.users.find(u => u.email === DB.session);
+function log(action, target="") {
+  DB.logs.unshift({ action, target, by: DB.session, time: now() });
+  if (DB.logs.length > 300) DB.logs = DB.logs.slice(0,300);
+}
+function avatarHTML(u, size="") {
+  if (u?.photo) return `<div class="avatar ${size}"><img src="${u.photo}"></div>`;
+  const n = u?.name || "?";
+  return `<div class="avatar ${size}" style="background:${u?.color || colorFor(u?.email||"x")}">${esc(n[0])}</div>`;
+}
+function vBadge(size="") {
+  return `<span class="vbadge ${size}" title="تأییدشده">✓</span>`;
+}
+
+/* ===== AUTH ===== */
+let isSignup = false;
+$("switchAuth").onclick = () => {
+  isSignup = !isSignup;
+  $("authName").style.display = isSignup ? "block" : "none";
+  $("authUsername").style.display = isSignup ? "block" : "none";
+  $("authBtn").textContent = isSignup ? "ثبت‌نام" : "ورود";
+  $("switchAuth").textContent = isSignup ? "حساب داری؟ وارد شو" : "حساب نداری؟ ثبت‌نام کن";
+};
+$("authBtn").onclick = () => {
+  const email = $("authEmail").value.trim().toLowerCase();
+  const pass = $("authPass").value;
+  const name = $("authName").value.trim();
+  const username = $("authUsername").value.trim();
+  if (!email || !pass) return alert("ایمیل و رمز رو پر کن");
+  
+  if (isSignup) {
+    if (!name) return alert("نام رو وارد کن");
+    if (DB.users.find(u => u.email === email)) return alert("این ایمیل قبلاً ثبت شده");
+    if (username && DB.users.find(u => u.username === username)) return alert("این آیدی قبلاً گرفته شده");
+    DB.users.push({
+      email, password: pass, name,
+      username: username || "@" + email.split("@")[0],
+      bio:"", phone:"", photo:null,
+      verified:false, isOwner:false, isAdmin:false,
+      banned:false, banType:null, color:colorFor(email), createdAt: now()
+    });
+    saveDB(); alert("ثبت‌نام موفق!"); $("switchAuth").click(); return;
+  }
+  const u = DB.users.find(x => x.email === email);
+  if (!u) return alert("کاربر پیدا نشد");
+  // رمز می‌تونه خالی باشه اگه مالک حذف کرده
+  if (u.password && u.password !== pass) return alert("رمز اشتباهه");
+  if (u.banned) {
+    if (u.banType === "permanent") return alert("⛔ برای همیشه بلاک شده‌ای");
+    if (u.banType === "temp") return alert("⏳ موقتاً بلاک هستی");
+  }
+  DB.session = email; saveDB(); startApp();
+};
+
+/* ===== START ===== */
+let currentChat = null, refreshTimer = null;
+function applyTheme() {
+  document.body.classList.toggle("light", DB.theme === "light");
+  $("themeBtn").textContent = DB.theme === "light" ? "☀️" : "🌙";
+}
+function toggleTheme() { DB.theme = DB.theme === "light" ? "dark" : "light"; saveDB(); applyTheme(); }
+
+function startApp() {
+  $("authScreen").style.display = "none";
+  $("app").style.display = "block";
+  applyTheme(); renderChatList();
+  refreshTimer = setInterval(() => { DB = loadDB(); renderChatList(); if (currentChat) renderMessages(); }, 1500);
+}
+
+/* ===== CHAT LIST ===== */
+function renderChatList() {
+  const myChats = DB.chats.filter(c => c.members.includes(DB.session));
+  const q = ($("searchInput").value||"").trim().toLowerCase();
+  const list = $("chatList");
+  const filtered = myChats.filter(c => chatTitle(c).toLowerCase().includes(q))
+    .sort((a,b) => lastMsgTime(b.id) - lastMsgTime(a.id));
+  if (!filtered.length) {
+    list.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:14px;">
+      هنوز چتی نداری<br>روی «پیام جدید» بزن</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(c => {
+    const u = chatUser(c);
+    const title = chatTitle(c);
+    const ver = u ? u.verified : c.verified;
+    const icon = c.type==="group"?"👥":c.type==="channel"?"📢":c.type==="saved"?"💾":"";
+    const lm = [...DB.messages].reverse().find(m => m.chatId === c.id);
+    const lt = lm ? ((lm.from===DB.session?"شما: ":"")+(lm.photo?"📷 عکس":lm.text)) : (c.type==="channel"?"کانال":"—");
+    const avatar = u ? avatarHTML(u) : `<div class="avatar" style="background:${colorFor(c.name||"g")}">${icon || esc(title[0])}</div>`;
+    return `<div class="chat-item ${currentChat===c.id?'active':''}" onclick="openChat('${c.id}')">
+      ${avatar}
+      <div class="chat-info">
+        <div class="name">${esc(title)} ${ver?vBadge():''}</div>
+        <div class="last">${esc(lt).slice(0,45)}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function lastMsgTime(cid) { const m = [...DB.messages].reverse().find(x=>x.chatId===cid); return m?m.time:0; }
+function chatUser(c) { if (c.type!=="private") return null; const o=c.members.find(m=>m!==DB.session); return DB.users.find(u=>u.email===o); }
+function chatTitle(c) {
+  if (c.type === "private") { const u=chatUser(c); return u?u.name:"کاربر"; }
+  return c.name || "چت";
+}
+
+/* ===== OPEN CHAT ===== */
+function openChat(chatId) {
+  currentChat = chatId;
+  const c = DB.chats.find(x=>x.id===chatId); if (!c) return;
+  $("chatEmpty").style.display="none"; $("chatView").style.display="flex";
+  const u = chatUser(c); const title = chatTitle(c);
+  const ver = u ? u.verified : c.verified;
+  const icon = c.type==="group"?"👥":c.type==="channel"?"📢":c.type==="saved"?"💾":"";
+  const av = $("chatAvatar");
+  if (u?.photo) av.innerHTML = `<img src="${u.photo}">`;
+  else { av.innerHTML = u ? esc(title[0]) : icon || esc(title[0]); av.style.background = u?.color || colorFor(c.name||"g"); }
+  $("chatName").innerHTML = esc(title) + (ver?vBadge():'');
+  $("chatStatus").textContent = c.type==="group"?`${c.members.length} عضو`:
+                                 c.type==="channel"?"کانال":
+                                 c.type==="saved"?"یادداشت‌های من":"آنلاین";
+  renderMessages(); renderChatList();
+  setTimeout(()=>$("msgInput").focus(), 100);
+}
+function renderMessages() {
+  if (!currentChat) return;
+  const msgs = DB.messages.filter(m=>m.chatId===currentChat);
+  const box = $("messages");
+  const c = DB.chats.find(x=>x.id===currentChat);
+  if (!msgs.length) { box.innerHTML = `<div style="text-align:center;color:var(--text-dim);font-size:13px;margin-top:20px;">هنوز پیامی نیست — اولین پیام رو بفرست!</div>`; return; }
+  box.innerHTML = msgs.map(m => {
+    const isMe = m.from === DB.session;
+    const sender = DB.users.find(u=>u.email===m.from);
+    const showS = !isMe && c.type !== "private";
+    const canDelete = me()?.isAdmin || m.from === DB.session;
+    return `<div class="msg ${isMe?'me':''}" ${canDelete?`ondblclick="adminDeleteMessage('${m.id}')"`:''} title="${canDelete?'دوبار کلیک = حذف':''}">
+      ${showS?`<div class="sender">${esc(sender?.name||"کاربر")}</div>`:""}
+      ${m.photo?`<img class="photo" src="${m.photo}">`:""}
+      ${m.text?esc(m.text):""}
+      <div class="meta">
+        <span class="time">${fmtTime(m.time)}</span>
+        ${isMe?'<span class="check">✓✓</span>':''}
+      </div>
+    </div>`;
+  }).join("");
+  box.scrollTop = box.scrollHeight;
+}
+function sendMsg() {
+  const text = $("msgInput").value.trim();
+  if (!text || !currentChat) return;
+  DB.messages.push({ id:"m_"+now()+Math.random().toString(36).slice(2), chatId:currentChat, from:DB.session, text, time:now() });
+  saveDB(); $("msgInput").value=""; renderMessages(); renderChatList();
+}
+function sendPhoto(e) {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 800000) return alert("عکس خیلی بزرگه (بیشتر از 800KB)");
+  const r = new FileReader();
+  r.onload = ev => {
+    if (!currentChat) return alert("اول یه چت باز کن");
+    DB.messages.push({ id:"m_"+now()+Math.random().toString(36).slice(2), chatId:currentChat, from:DB.session, text:"", photo: ev.target.result, time:now() });
+    saveDB(); renderMessages(); renderChatList();
+  };
+  r.readAsDataURL(f);
+  e.target.value = "";
+}
+
+/* ===== NEW CHAT ===== */
+function openNewChat() {
+  const others = DB.users.filter(u=>u.email!==DB.session && !u.banned);
+  const html = others.length ? others.map(u => `
+    <div class="admin-item">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:180px;">
+        ${avatarHTML(u,"sm")}
+        <div>
+          <div class="u">${esc(u.name)} ${u.verified?vBadge():''}</div>
+          <div style="color:var(--text-dim);font-size:12px;">${esc(u.username||u.email)}</div>
+        </div>
+      </div>
+      <button class="btn-primary btn-sm" onclick="startPrivate('${u.email}')">چت</button>
+    </div>`).join("") : `<p style="text-align:center;color:var(--text-dim);padding:20px;">کاربر دیگه‌ای نیست</p>`;
+  $("modalContent").innerHTML = `
+    <h2>پیام جدید</h2>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn-primary" onclick="createGroup()">👥 گروه</button>
+      <button class="btn-primary" onclick="createChannel()">📢 کانال</button>
+    </div>
+    <h3>چت خصوصی:</h3>
+    <div style="max-height:340px;overflow-y:auto;">${html}</div>
+    <div style="margin-top:16px;text-align:left;"><button class="btn-gray" onclick="closeModal()">بستن</button></div>`;
+  showModal();
+}
+function startPrivate(email) {
+  let c = DB.chats.find(x=>x.type==="private" && x.members.length===2 && x.members.includes(DB.session) && x.members.includes(email));
+  if (!c) { c = { id:"c_"+now(), type:"private", members:[DB.session,email] }; DB.chats.push(c); saveDB(); }
+  closeModal(); openChat(c.id);
+}
+function createGroup() {
+  const name = prompt("اسم گروه:"); if (!name) return;
+  const c = { id:"g_"+now(), type:"group", name, members:[DB.session], owner:DB.session, verified:false, createdAt:now() };
+  DB.chats.push(c); saveDB(); log("ایجاد گروه",name); closeModal(); openChat(c.id);
+}
+function createChannel() {
+  const name = prompt("اسم کانال:"); if (!name) return;
+  const c = { id:"ch_"+now(), type:"channel", name, members:[DB.session], owner:DB.session, verified:false, createdAt:now() };
+  DB.chats.push(c); saveDB(); log("ایجاد کانال",name); closeModal(); openChat(c.id);
+}
+
+/* ===== MENU ===== */
+function openMenu() {
+  const u = me();
+  $("modalContent").innerHTML = `
+    <h2>منو</h2>
+    <div class="admin-item" style="cursor:pointer;" onclick="closeModal();openProfile('${u.email}')">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;">
+        ${avatarHTML(u,"sm")}
+        <div>
+          <div class="u">${esc(u.name)} ${u.verified?vBadge():''}</div>
+          <div style="color:var(--text-dim);font-size:12px;">${esc(u.username||"")}</div>
+        </div>
+      </div>
+      <span style="color:var(--text-dim);">›</span>
+    </div>
+    <div class="admin-item" style="cursor:pointer;" onclick="closeModal();openSettings()">
+      <span class="u">⚙️ تنظیمات</span><span style="color:var(--text-dim);">›</span>
+    </div>
+    <div class="admin-item" style="cursor:pointer;" onclick="closeModal();openSaved()">
+      <span class="u">💾 پیام‌های ذخیره‌شده</span><span style="color:var(--text-dim);">›</span>
+    </div>
+    ${u.isAdmin?`
+      <div class="admin-item" style="cursor:pointer;background:linear-gradient(135deg,#e53935,#b71c1c);" onclick="closeModal();openAdminPanel()">
+        <span class="u" style="color:#fff;">🛡️ پنل مدیریت</span>
+        <span style="color:#fff;">›</span>
+      </div>`:''}
+    <div style="margin-top:20px;text-align:left;">
+      <button class="btn-gray" onclick="logout()">خروج</button>
+      <button class="btn-gray" onclick="closeModal()">بستن</button>
+    </div>`;
+  showModal();
+}
+
+/* ===== PROFILE ===== */
+function openProfile(email) {
+  const u = DB.users.find(x=>x.email===email); if (!u) return;
+  const isSelf = email===DB.session;
+  const canAdmin = me()?.isAdmin;
+  $("modalContent").innerHTML = `
+    <div class="profile-header">
+      <div onclick="${isSelf?'editProfile()':''}">${avatarHTML(u,"lg")}</div>
+      <div class="name">${esc(u.name)} ${u.verified?vBadge("lg"):''}</div>
+      <div class="status">${u.bio ? esc(u.bio) : (isSelf?'بیو نداری — ویرایش کن':"آخرین بازدید به‌تازگی")}</div>
+    </div>
+    <div class="field"><span class="label">آیدی</span><span class="value">${esc(u.username||"—")}</span></div>
+    <div class="field"><span class="label">ایمیل</span><span class="value">${esc(u.email)}</span></div>
+    <div class="field"><span class="label">شماره</span><span class="value">${esc(u.phone||"—")}</span></div>
+    <div class="field"><span class="label">بیو</span><span class="value">${esc(u.bio||"—")}</span></div>
+    <div class="field"><span class="label">عضویت از</span><span class="value">${u.createdAt?new Date(u.createdAt).toLocaleDateString("fa-IR"):"—"}</span></div>
+    ${u.isOwner?'<div class="field"><span class="label">نقش</span><span class="value" style="color:var(--gold);">👑 مالک</span></div>':''}
+    ${u.isAdmin&&!u.isOwner?'<div class="field"><span class="label">نقش</span><span class="value" style="color:var(--danger);">🛡️ ادمین</span></div>':''}
+    <div style="margin-top:16px;text-align:left;">
+      ${isSelf?`<button class="btn-primary" onclick="editProfile()">✏️ ویرایش پروفایل</button>`:''}
+      ${!isSelf?`<button class="btn-primary" onclick="closeModal();startPrivate('${u.email}')">💬 ارسال پیام</button>`:''}
+      ${canAdmin&&!isSelf&&!u.isOwner?`
+        <button class="${u.verified?'btn-gray':'btn-success'}" onclick="adminToggleVerify('${u.email}')">${u.verified?'حذف تیک':'دادن تیک آبی'}</button>
+        <button class="${u.banned?'btn-success':'btn-danger'}" onclick="adminToggleBan('${u.email}')">${u.banned?'آنبلاک':'بلاک'}</button>
+        <button class="btn-danger" onclick="adminDeleteUser('${u.email}')">حذف</button>
+      `:''}
+      ${canAdmin&&isSelf&&!u.verified?`<button class="btn-success" onclick="adminToggleVerify('${u.email}')">✔ دادن تیک به خودم</button>`:''}
+      <button class="btn-gray" onclick="closeModal()">بستن</button>
+    </div>`;
+  showModal();
+}
+
+function editProfile() {
+  const u = me();
+  $("modalContent").innerHTML = `
+    <h2>✏️ ویرایش پروفایل</h2>
+    <div style="text-align:center;margin-bottom:16px;">
+      ${avatarHTML(u,"lg")}
+      <div style="margin-top:10px;">
+        <label class="file-btn">📷 آپلود عکس جدید
+          <input type="file" accept="image/*" onchange="uploadAvatar(event)">
+        </label>
+        ${u.photo?`<button class="btn-danger btn-sm" onclick="removeAvatar()">حذف عکس</button>`:''}
+      </div>
+    </div>
+    <label>نام</label>
+    <input id="epName" value="${esc(u.name)}">
+    <label>آیدی</label>
+    <input id="epUser" value="${esc(u.username||"")}" placeholder="@username">
+    <label>بیو</label>
+    <textarea id="epBio" rows="2">${esc(u.bio||"")}</textarea>
+    <label>شماره</label>
+    <input id="epPhone" value="${esc(u.phone||"")}">
+    <div style="margin-top:16px;text-align:left;">
+      <button class="btn-primary" onclick="saveProfile()">ذخیره</button>
+      <button class="btn-gray" onclick="closeModal()">انصراف</button>
+    </div>`;
+  showModal();
+}
+function uploadAvatar(e) {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 500000) return alert("عکس باید کمتر از 500KB باشه");
+  const r = new FileReader();
+  r.onload = ev => { me().photo = ev.target.result; saveDB(); log("آپلود عکس پروفایل"); editProfile(); renderChatList(); if(currentChat)openChat(currentChat); };
+  r.readAsDataURL(f);
+}
+function removeAvatar() {
+  if (!confirm("عکس حذف بشه؟")) return;
+  me().photo = null; saveDB(); log("حذف عکس پروفایل"); editProfile(); renderChatList();
+}
+function saveProfile() {
+  const u = me();
+  u.name = $("epName").value.trim() || u.name;
+  const newUser = $("epUser").value.trim();
+  if (newUser && newUser !== u.username && DB.users.find(x=>x.username===newUser && x.email!==u.email)) return alert("این آیدی گرفته شده");
+  u.username = newUser;
+  u.bio = $("epBio").value.trim();
+  u.phone = $("epPhone").value.trim();
+  saveDB(); log("ویرایش پروفایل"); closeModal(); renderChatList();
+  if (currentChat) openChat(currentChat);
+}
+
+/* ===== SETTINGS ===== */
+function openSettings() {
+  const u = me();
+  $("modalContent").innerHTML = `
+    <h2>⚙️ تنظیمات</h2>
+    <div class="admin-item">
+      <span class="u">🌗 حالت نمایش</span>
+      <button class="btn-primary" onclick="toggleTheme()">${DB.theme==="light"?"روشن":"تاریک"}</button>
+    </div>
+    <div class="admin-item">
+      <span class="u">🔑 رمز عبور</span>
+      <div>
+        <button class="btn-primary btn-sm" onclick="changePassword()">تغییر</button>
+        ${u.isOwner?'<button class="btn-danger btn-sm" onclick="removePassword()">حذف رمز</button>':''}
+      </div>
+    </div>
+    <div class="admin-item">
+      <span class="u">👤 ویرایش پروفایل</span>
+      <button class="btn-primary btn-sm" onclick="closeModal();editProfile()">باز کن</button>
+    </div>
+    <div class="admin-item">
+      <span class="u">💾 پیام‌های ذخیره‌شده</span>
+      <button class="btn-primary btn-sm" onclick="closeModal();openSaved()">باز کن</button>
+    </div>
+    <div class="admin-item">
+      <span class="u">📊 آمار من</span>
+      <span style="color:var(--text-dim);font-size:13px;">${DB.messages.filter(m=>m.from===u.email).length} پیام</span>
+    </div>
+    ${u.isAdmin?`
+      <div class="admin-item" style="cursor:pointer;background:linear-gradient(135deg,#e53935,#b71c1c);" onclick="closeModal();openAdminPanel()">
+        <span class="u" style="color:#fff;">🛡️ پنل مدیریت</span>
+        <span style="color:#fff;">›</span>
+      </div>`:''}
+    <div style="margin-top:20px;text-align:left;"><button class="btn-gray" onclick="closeModal()">بستن</button></div>`;
+  showModal();
+}
+function changePassword() {
+  const np = prompt("رمز جدید:"); if (np === null) return;
+  me().password = np; saveDB(); log("تغییر رمز"); alert("✅ تغییر کرد");
+}
+function removePassword() {
+  if (!confirm("رمز حذف بشه؟")) return;
+  me().password = ""; saveDB(); log("حذف رمز"); alert("✅ حذف شد");
+}
+
+function openSaved() {
+  let c = DB.chats.find(x=>x.type==="saved" && x.members.includes(DB.session));
+  if (!c) { c = { id:"sv_"+now(), type:"saved", name:"پیام‌های ذخیره‌شده", members:[DB.session] }; DB.chats.push(c); saveDB(); }
+  closeModal(); openChat(c.id);
+}
+
+/* ===== CHAT INFO ===== */
+function openChatInfo(id) {
+  const c = DB.chats.find(x=>x.id===id); if (!c) return;
+  if (c.type === "private") { const u = chatUser(c); return openProfile(u.email); }
+  $("modalContent").innerHTML = `
+    <h2>اطلاعات ${c.type==="channel"?"کانال":"گروه"}</h2>
+    <div class="profile-header">
+      <div class="avatar lg" style="background:${colorFor(c.name)}">${c.type==="group"?"👥":"📢"}</div>
+      <div class="name">${esc(c.name)} ${c.verified?vBadge("lg"):''}</div>
+      <div class="status">${c.members.length} عضو</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+      ${me()?.isAdmin?`<button class="btn-primary btn-sm" onclick="addMember('${c.id}')">➕ افزودن عضو</button>`:''}
+      ${me()?.isAdmin&&!c.verified?`<button class="btn-success btn-sm" onclick="verifyChat('${c.id}')">✔ تیک آبی</button>`:''}
+      ${me()?.isAdmin&&c.verified?`<button class="btn-gray btn-sm" onclick="unverifyChat('${c.id}')">حذف تیک</button>`:''}
+      ${me()?.isAdmin?`<button class="btn-danger btn-sm" onclick="adminDeleteChat('${c.id}')">حذف چت</button>`:''}
+    </div>
+    <h3>اعضا (${c.members.length})</h3>
+    <div style="max-height:220px;overflow-y:auto;">
+      ${c.members.map(email => {
+        const u = DB.users.find(x=>x.email===email);
+        return `<div class="admin-item">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;">
+            ${avatarHTML(u,"xs")}
+            <span class="u">${esc(u?.name||email)} ${u?.verified?vBadge():''} ${email===c.owner?'<span style="color:gold;font-size:11px;">مالک</span>':''}</span>
+          </div>
+          ${me()?.isAdmin && email !== c.owner ? `<button class="btn-danger btn-sm" onclick="kickMember('${c.id}','${email}')">حذف</button>`:''}
+        </div>`;
+      }).join("")}
+    </div>
+    <div style="margin-top:16px;text-align:left;"><button class="btn-gray" onclick="closeModal()">بستن</button></div>`;
+  showModal();
+}
+function addMember(cid) {
+  const c = DB.chats.find(x=>x.id===cid);
+  const not = DB.users.filter(u=>!c.members.includes(u.email));
+  if (!not.length) return alert("همه کاربرا عضو هستن");
+  const email = prompt("ایمیل کاربر:\n" + not.map(u=>u.email).join("\n"));
+  if (!email) return;
+  const u = DB.users.find(x=>x.email===email.trim());
+  if (!u) return alert("کاربر پیدا نشد");
+  if (!c.members.includes(u.email)) c.members.push(u.email);
+  saveDB(); log("افزودن عضو",u.email); openChatInfo(cid);
+}
+function kickMember(cid, email) {
+  const c = DB.chats.find(x=>x.id===cid);
+  c.members = c.members.filter(e=>e!==email);
+  saveDB(); log("حذف عضو",email); openChatInfo(cid);
+}
+function verifyChat(cid) { DB.chats.find(x=>x.id===cid).verified = true; saveDB(); log("تیک آبی چت"); closeModal(); renderChatList(); if(currentChat===cid)openChat(cid); }
+function unverifyChat(cid) { DB.chats.find(x=>x.id===cid).verified = false; saveDB(); closeModal(); renderChatList(); }
+function openChatMenu() {
+  const c = DB.chats.find(x=>x.id===currentChat);
+  const items = [];
+  if (c.type!=="saved") items.push({t:"ℹ️ اطلاعات", f:`closeModal();openChatInfo('${c.id}')`});
+  if (me()?.isAdmin) items.push({t:"🛡️ پنل مدیریت", f:"closeModal();openAdminPanel()"});
+  items.push({t:"🗑️ حذف چت", f:`deleteChat('${c.id}')`});
+  $("modalContent").innerHTML = `
+    <h2>گزینه‌ها</h2>
+    ${items.map(i=>`<div class="admin-item" style="cursor:pointer;" onclick="${i.f}"><span class="u">${i.t}</span></div>`).join("")}
+    <div style="margin-top:16px;text-align:left;"><button class="btn-gray" onclick="closeModal()">بستن</button></div>`;
+  showModal();
+}
+function deleteChat(cid) {
+  if (!confirm("این چت حذف بشه؟")) return;
+  const c = DB.chats.find(x=>x.id===cid);
+  if (c.type==="private" || c.type==="saved") {
+    DB.chats = DB.chats.filter(x=>x.id!==cid);
+    DB.messages = DB.messages.filter(m=>m.chatId!==cid);
+  } else c.members = c.members.filter(e=>e!==DB.session);
+  if (currentChat===cid) { currentChat=null; $("chatEmpty").style.display="flex"; $("chatView").style.display="none"; }
+  saveDB(); closeModal(); renderChatList(); log("حذف چت",cid);
+}
+
+/* =========================================================
+   ADMIN PANEL
+   ========================================================= */
+let adminTab = "users";
+function openAdminPanel() {
+  if (!me()?.isAdmin) return alert("دسترسی نداری");
+  renderAdminPanel(); showModal();
+}
+function renderAdminPanel() {
+  $("modalContent").className = "modal wide";
+  const tabs = ["users","chats","messages","stats","logs","settings"];
+  const labels = {users:"👥 کاربران", chats:"💬 چت‌ها", messages:"✉️ پیام‌ها", stats:"📊 آمار", logs:"📜 لاگ", settings:"🎛️ تنظیمات"};
+  const tabsHTML = `<div class="tabs">${tabs.map(t=>`<div class="tab ${adminTab===t?'active':''}" onclick="adminTab='${t}';renderAdminPanel()">${labels[t]}</div>`).join("")}</div>`;
+  let body = "";
+  if (adminTab==="users") body = adminUsersTab();
+  else if (adminTab==="chats") body = adminChatsTab();
+  else if (adminTab==="messages") body = adminMessagesTab();
+  else if (adminTab==="stats") body = adminStatsTab();
+  else if (adminTab==="logs") body = adminLogsTab();
+  else if (adminTab==="settings") body = adminSettingsTab();
+  
+  $("modalContent").innerHTML = `
+    <h2>🛡️ پنل مدیریت پیشرفته</h2>
+    <p style="color:var(--text-dim);font-size:12px;margin-bottom:12px;">خوش آمدی ${esc(me().name)} 👑 — دسترسی کامل</p>
+    ${tabsHTML}${body}
+    <div style="margin-top:16px;text-align:left;">
+      <button class="btn-danger" onclick="resetAll()">🗑️ ریست کل</button>
+      <button class="btn-gray" onclick="closeModal()">بستن</button>
+    </div>`;
+}
+function adminUsersTab() {
+  const q = (window._auSearch||"").toLowerCase();
+  const f = window._auFilter || "all";
+  let list = DB.users.filter(u => u.name.toLowerCase().includes(q) || u.email.includes(q) || (u.username||"").toLowerCase().includes(q));
+  if (f==="verified") list = list.filter(u=>u.verified);
+  if (f==="banned") list = list.filter(u=>u.banned);
+  if (f==="admin") list = list.filter(u=>u.isAdmin);
+  return `
+    <input class="admin-search" placeholder="🔍 جستجوی کاربر..." value="${esc(window._auSearch||"")}" 
+      oninput="window._auSearch=this.value;renderAdminPanel();setTimeout(()=>{const i=document.querySelector('.admin-search');i.focus();i.setSelectionRange(i.value.length,i.value.length)},10)">
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn-${f==='all'?'primary':'gray'} btn-sm" onclick="window._auFilter='all';renderAdminPanel()">همه (${DB.users.length})</button>
+      <button class="btn-${f==='verified'?'success':'gray'} btn-sm" onclick="window._auFilter='verified';renderAdminPanel()">✔ تأییدشده (${DB.users.filter(u=>u.verified).length})</button>
+      <button class="btn-${f==='banned'?'danger':'gray'} btn-sm" onclick="window._auFilter='banned';renderAdminPanel()">⛔ بلاک (${DB.users.filter(u=>u.banned).length})</button>
+      <button class="btn-${f==='admin'?'primary':'gray'} btn-sm" onclick="window._auFilter='admin';renderAdminPanel()">🛡️ ادمین (${DB.users.filter(u=>u.isAdmin).length})</button>
+    </div>
+    ${list.map(u => `
+      <div class="admin-item">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px;">
+          ${avatarHTML(u,"sm")}
+          <div>
+            <div class="u">${esc(u.name)} ${u.verified?vBadge():''} ${u.isOwner?'<span style="color:gold;" title="مالک">♛</span>':''} ${u.isAdmin&&!u.isOwner?'<span title="ادمین">🛡️</span>':''} ${u.banned?'<span style="color:var(--danger);" title="بلاک">⛔</span>':''}</div>
+            <div style="color:var(--text-dim);font-size:11px;">${esc(u.email)} · ${esc(u.username||"—")}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn-gray btn-sm" onclick="closeModal();openProfile('${u.email}')" title="مشاهده">👁</button>
+          <button class="${u.verified?'btn-gray':'btn-success'} btn-sm" onclick="adminToggleVerify('${u.email}')">${u.verified?'حذف تیک':'تیک آبی'}</button>
+          ${!u.isOwner?`<button class="${u.banned?'btn-success':'btn-danger'} btn-sm" onclick="adminToggleBan('${u.email}')">${u.banned?'آنبلاک':'بلاک'}</button>`:''}
+          ${!u.isOwner?`<button class="btn-${u.isAdmin?'gray':'primary'} btn-sm" onclick="adminToggleAdmin('${u.email}')">${u.isAdmin?'حذف ادمین':'ادمین کن'}</button>`:''}
+          ${!u.isOwner && u.email!==DB.session?`<button class="btn-danger btn-sm" onclick="adminDeleteUser('${u.email}')">حذف</button>`:''}
+        </div>
+      </div>
+    `).join("") || `<p style="text-align:center;color:var(--text-dim);padding:20px;">کاربری نیست</p>`}`;
+}
+function adminChatsTab() {
+  const f = window._acFilter || "all";
+  let list = DB.chats.filter(c=>c.type!=="saved");
+  if (f!=="all") list = list.filter(c=>c.type===f);
+  return `
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn-${f==='all'?'primary':'gray'} btn-sm" onclick="window._acFilter='all';renderAdminPanel()">همه (${DB.chats.filter(c=>c.type!=="saved").length})</button>
+      <button class="btn-${f==='private'?'primary':'gray'} btn-sm" onclick="window._acFilter='private';renderAdminPanel()">💬 خصوصی (${DB.chats.filter(c=>c.type==="private").length})</button>
+      <button class="btn-${f==='group'?'primary':'gray'} btn-sm" onclick="window._acFilter='group';renderAdminPanel()">👥 گروه (${DB.chats.filter(c=>c.type==="group").length})</button>
+      <button class="btn-${f==='channel'?'primary':'gray'} btn-sm" onclick="window._acFilter='channel';renderAdminPanel()">📢 کانال (${DB.chats.filter(c=>c.type==="channel").length})</button>
+    </div>
+    ${list.map(c => `
+      <div class="admin-item">
+        <div class="u">
+          ${c.type==='group'?'👥':c.type==='channel'?'📢':'💬'} ${esc(c.name || chatTitle(c))} 
+          ${c.verified?vBadge():''}
+          <div style="color:var(--text-dim);font-size:11px;">${c.members.length} عضو · ${DB.messages.filter(m=>m.chatId===c.id).length} پیام</div>
+        </div>
+        <div class="actions">
+          <button class="btn-gray btn-sm" onclick="closeModal();openChat('${c.id}')">باز کن</button>
+          ${c.type!=='private'&&!c.verified?`<button class="btn-success btn-sm" onclick="verifyChat('${c.id}');renderAdminPanel()">تیک</button>`:''}
+          ${c.type!=='private'&&c.verified?`<button class="btn-gray btn-sm" onclick="unverifyChat('${c.id}');renderAdminPanel()">حذف تیک</button>`:''}
+          <button class="btn-danger btn-sm" onclick="adminDeleteChat('${c.id}')">حذف</button>
+        </div>
+      </div>`).join("") || `<p style="text-align:center;color:var(--text-dim);padding:20px;">چتی نیست</p>`}`;
+}
+function adminMessagesTab() {
+  const q = (window._amSearch||"").toLowerCase();
+  let list = [...DB.messages].reverse().slice(0,200);
+  if (q) list = list.filter(m => (m.text||"").toLowerCase().includes(q));
+  return `
+    <input class="admin-search" placeholder="🔍 جستجوی پیام..." value="${esc(window._amSearch||"")}" 
+      oninput="window._amSearch=this.value;renderAdminPanel();setTimeout(()=>{const i=document.querySelector('.admin-search');i.focus();i.setSelectionRange(i.value.length,i.value.length)},10)">
+    <p style="color:var(--text-dim);font-size:12px;margin-bottom:8px;">آخرین ۲۰۰ پیام — دوبار کلیک برای حذف</p>
+    ${list.map(m => {
+      const u = DB.users.find(x=>x.email===m.from);
+      const c = DB.chats.find(x=>x.id===m.chatId);
+      return `<div class="admin-item" style="cursor:pointer;" ondblclick="adminDeleteMessage('${m.id}')">
+        <div class="u">
+          <b>${esc(u?.name||"کاربر")}</b> در «${esc(c?.name||chatTitle(c)||"چت")}»
+          <div style="color:var(--text);font-size:13px;margin-top:4px;">${m.photo?'📷 عکس':esc((m.text||"").slice(0,80))}</div>
+          <div style="color:var(--text-dim);font-size:11px;">${new Date(m.time).toLocaleString("fa-IR")}</div>
+        </div>
+        <button class="btn-danger btn-sm" onclick="event.stopPropagation();adminDeleteMessage('${m.id}')">حذف</button>
+      </div>`;
+    }).join("") || `<p style="text-align:center;color:var(--text-dim);padding:20px;">پیامی نیست</p>`}`;
+}
+function adminStatsTab() {
+  const u=DB.users.length, m=DB.messages.length, b=DB.users.filter(x=>x.banned).length,
+        v=DB.users.filter(x=>x.verified).length, a=DB.users.filter(x=>x.isAdmin).length,
+        tc=DB.chats.filter(x=>x.type!=="saved").length, g=DB.chats.filter(x=>x.type==="group").length,
+        ch=DB.chats.filter(x=>x.type==="channel").length, pv=DB.chats.filter(x=>x.type==="private").length;
+  return `
+    <div class="stats">
+      <div class="stat-card"><div class="num">${u}</div><div class="lbl">کاربر</div></div>
+      <div class="stat-card"><div class="num">${m}</div><div class="lbl">پیام</div></div>
+      <div class="stat-card"><div class="num">${tc}</div><div class="lbl">کل چت</div></div>
+      <div class="stat-card"><div class="num">${pv}</div><div class="lbl">خصوصی</div></div>
+      <div class="stat-card"><div class="num">${g}</div><div class="lbl">گروه</div></div>
+      <div class="stat-card"><div class="num">${ch}</div><div class="lbl">کانال</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--success);">${v}</div><div class="lbl">تأییدشده</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--danger);">${b}</div><div class="lbl">بلاک</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--danger);">${a}</div><div class="lbl">ادمین</div></div>
+      <div class="stat-card"><div class="num" style="color:gold;">1</div><div class="lbl">مالک</div></div>
+    </div>`;
+}
+function adminLogsTab() {
+  return DB.logs.length ? DB.logs.slice(0,100).map(l => `
+    <div class="admin-item">
+      <div class="u">
+        <b>${esc(l.action)}</b> ${l.target?`→ <span style="color:var(--accent);">${esc(l.target)}</span>`:''}
+        <div style="color:var(--text-dim);font-size:11px;">توسط ${esc(l.by)} · ${new Date(l.time).toLocaleString("fa-IR")}</div>
+      </div>
+    </div>`).join("") : `<p style="text-align:center;color:var(--text-dim);padding:20px;">لاگی نیست</p>`;
+}
+function adminSettingsTab() {
+  return `
+    <div class="admin-item">
+      <span class="u">🎨 حالت نمایش</span>
+      <button class="btn-primary btn-sm" onclick="toggleTheme()">${DB.theme==="light"?"روشن":"تاریک"}</button>
+    </div>
+    <div class="admin-item">
+      <span class="u">👑 مالک</span>
+      <span style="color:gold;font-size:13px;">${esc(OWNER_EMAIL)}</span>
+    </div>
+    <div class="admin-item">
+      <span class="u">📅 تاریخچه لاگ</span>
+      <button class="btn-danger btn-sm" onclick="clearLogs()">پاک کردن لاگ‌ها</button>
+    </div>
+    <div class="admin-item">
+      <span class="u">📤 خروجی گرفتن از دیتابیس</span>
+      <button class="btn-primary btn-sm" onclick="exportDB()">دانلود JSON</button>
+    </div>
+    <div class="admin-item">
+      <span class="u">📥 بازیابی از فایل</span>
+      <label class="file-btn btn-sm">انتخاب فایل
+        <input type="file" accept=".json" onchange="importDB(event)">
+      </label>
+    </div>
+    <div class="admin-item">
+      <span class="u">💾 فضای مصرفی</span>
+      <span style="color:var(--text-dim);font-size:13px;">${(JSON.stringify(DB).length/1024).toFixed(1)} KB</span>
+    </div>`;
+}
+
+/* ===== ADMIN ACTIONS ===== */
+function adminToggleVerify(email) {
+  const u = DB.users.find(x=>x.email===email); if (!u) return;
+  u.verified = !u.verified; saveDB(); log("تغییر تیک آبی",email);
+  renderAdminPanel(); renderChatList(); if (currentChat) openChat(currentChat);
+}
+function adminToggleBan(email) {
+  const u = DB.users.find(x=>x.email===email); if (!u||u.isOwner) return;
+  if (u.banned) { u.banned=false; u.banType=null; }
+  else {
+    const t = prompt("نوع بلاک:\n1) موقت\n2) دائم","1");
+    if (t===null) return;
+    u.banned=true; u.banType = t==="2"?"permanent":"temp";
+  }
+  saveDB(); log(u.banned?"بلاک":"آنبلاک",email);
+  renderAdminPanel(); renderChatList();
+}
+function adminToggleAdmin(email) {
+  const u = DB.users.find(x=>x.email===email); if (!u||u.isOwner) return;
+  u.isAdmin = !u.isAdmin; saveDB(); log(u.isAdmin?"ادمین شد":"حذف ادمین",email);
+  renderAdminPanel();
+}
+function adminDeleteUser(email) {
+  if (!confirm(`کاربر ${email} کامل حذف بشه؟`)) return;
+  DB.users = DB.users.filter(u=>u.email!==email);
+  saveDB(); log("حذف کاربر",email); renderAdminPanel();
+}
+function adminDeleteChat(cid) {
+  if (!confirm("این چت کامل حذف بشه؟")) return;
+  DB.chats = DB.chats.filter(c=>c.id!==cid);
+  DB.messages = DB.messages.filter(m=>m.chatId!==cid);
+  if (currentChat===cid) { currentChat=null; $("chatEmpty").style.display="flex"; $("chatView").style.display="none"; }
+  saveDB(); log("حذف چت",cid); renderAdminPanel(); renderChatList();
+}
+function adminDeleteMessage(mid) {
+  if (!confirm("این پیام حذف بشه؟")) return;
+  DB.messages = DB.messages.filter(m=>m.id!==mid);
+  saveDB(); log("حذف پیام",mid);
+  renderMessages();
+  if (adminTab==="messages") renderAdminPanel();
+}
+function clearLogs() {
+  if (!confirm("همه لاگ‌ها پاک بشن؟")) return;
+  DB.logs=[]; saveDB(); renderAdminPanel();
+}
+function exportDB() {
+  const data = JSON.stringify(DB, null, 2);
+  const blob = new Blob([data], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "badiyabgram_backup_" + Date.now() + ".json";
+  a.click();
+  log("خروجی دیتابیس");
+}
+function importDB(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (!d.users) throw 0;
+      if (!confirm("دیتابیس فعلی جایگزین بشه؟")) return;
+      DB = d; saveDB(); alert("✅ بازیابی شد"); location.reload();
+    } catch { alert("فایل نامعتبر"); }
+  };
+  r.readAsText(f);
+}
+function resetAll() {
+  if (!confirm("⚠️ همه چیز پاک بشه؟")) return;
+  if (!confirm("مطمئنی؟ برگشت‌پذیر نیست!")) return;
+  localStorage.removeItem(STORAGE_KEY); location.reload();
+}
+
+/* ===== MODAL ===== */
+function showModal() { $("modalBg").classList.add("show"); }
+function closeModal() { $("modalBg").classList.remove("show"); $("modalContent").className = "modal"; }
+$("modalBg").onclick = (e) => { if (e.target===$("modalBg")) closeModal(); };
+
+/* ===== LOGOUT ===== */
+function logout() { DB.session=null; saveDB(); clearInterval(refreshTimer); location.reload(); }
+
+/* ===== INIT ===== */
+$("searchInput").oninput = renderChatList;
+let logoClicks = 0, logoTimer = null;
+document.addEventListener("DOMContentLoaded", () => {
+  const logo = $("authLogo");
+  if (logo) logo.onclick = () => {
+    logoClicks++; clearTimeout(logoTimer);
+    logoTimer = setTimeout(()=>logoClicks=0, 800);
+    if (logoClicks>=3) {
+      logoClicks=0;
+      if (DB.session && me()?.isAdmin) openAdminPanel();
+      else alert("اول به عنوان مالک وارد شو");
+    }
+  };
+});
+window.onload = () => {
+  DB = loadDB();
+  if (DB.session) {
+    const u = DB.users.find(x=>x.email===DB.session);
+    if (u && !u.banned) startApp();
+    else { DB.session=null; saveDB(); }
+  }
+};
+</script>
+</body>
+</html>
